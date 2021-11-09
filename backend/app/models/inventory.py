@@ -2,6 +2,7 @@ from ipaddress import IPv4Address
 from typing import *
 
 from pydantic import validator
+from pydantic.main import BaseModel
 from sqlmodel import Field, Relationship, SQLModel
 
 
@@ -93,3 +94,8 @@ class DesktopReadWithInterface(DesktopRead):
 
 class InterfaceReadWithDesktop(InterfaceBase):
     desktop: Optional[DesktopRead]
+
+
+class SearchResults(BaseModel):
+    desktops: List[DesktopRead]
+    network_devices: List[NetworkRead]

@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "commissioner"
+name = "the-commissioner"
 version = "0.1.0"
 description = "The Network Commissioner!"
 authors = ["Ryan Bradshaw <ryan@rbradshaw.dev>"]
