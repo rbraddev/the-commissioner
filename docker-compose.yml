@@ -17,6 +17,7 @@ services:
       - db
 
   db:
+    container_name: db
     image: postgres:13.4
     expose:
       - 5432
@@ -36,6 +37,14 @@ services:
       PGADMIN_DEFAULT_PASSWORD: root
     ports:
       - "5050:80"
+  
+  tacacs:
+    container_name: tacacs
+    image: lfkeitel/tacacs_plus:alpine
+    volumes:
+      - ./tacacs/tac_plus.cfg:/etc/tac_plus/tac_plus.cfg
+    expose:
+      - 49
 
 volumes:
   pgdb:

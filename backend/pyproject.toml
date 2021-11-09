@@ -13,6 +13,8 @@ uvicorn = "^0.15.0"
 alembic = "^1.7.4"
 asyncpg = "^0.24.0"
 jsondiff = "^1.3.0"
+tacacs_plus = "^2.6"
+python-jose = {version = "^3.3.0", extras = ["cryptography"]}
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.2.5"

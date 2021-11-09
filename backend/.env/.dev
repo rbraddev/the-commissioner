@@ -1,4 +1,9 @@
 PROJECT=the-commissioner
 ENVIRONMENT=dev
 
+AUTH_TOKEN_EXPIRY_MINUTES=15
+AUTH_MODE=tacacs
+TACACS_SVR=tacacs
+TACACS_KEY=tac_plus_key
+
 DB_URL=postgresql+asyncpg://postgres:postgres@db:5432/commissioner

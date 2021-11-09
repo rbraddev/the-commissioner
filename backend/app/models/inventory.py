@@ -2,7 +2,7 @@ from ipaddress import IPv4Address
 from typing import *
 
 from pydantic import validator
-from pydantic.main import BaseModel
+from pydantic import BaseModel
 from sqlmodel import Field, Relationship, SQLModel
 
 

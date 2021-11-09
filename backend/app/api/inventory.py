@@ -7,7 +7,13 @@ from sqlalchemy import or_
 
 from app.core.inventory.tasks import update_inventory
 from app.db import get_session
-from app.models.inventory import NetworkRead, Network, Desktop, DesktopRead, SearchResults
+from app.models.inventory import (
+    NetworkRead,
+    Network,
+    Desktop,
+    DesktopRead,
+    SearchResults,
+)
 
 router = APIRouter()
 
@@ -34,18 +40,23 @@ async def start_update_task():
 async def get_network_devices(
     # session: AsyncSession = Depends(get_session),
     site: str = None,
-    device_type: str = None
+    device_type: str = None,
 ):
     expression = None
     if site is None and device_type is None:
         expression = select(Network)
     elif site and device_type:
-        expression = select(Network).where(Network.site.in_(site.split(",")), Network.device_type.in_(device_type.split(",")))
+        expression = select(Network).where(
+            Network.site.in_(site.split(",")),
+            Network.device_type.in_(device_type.split(",")),
+        )
     elif site:
         expression = select(Network).where(Network.site.in_(site.split(",")))
     elif device_type:
-        expression = select(Network).where(Network.device_type.in_(device_type.split(",")))
-    
+        expression = select(Network).where(
+            Network.device_type.in_(device_type.split(","))
+        )
+
     async with get_session() as session:
         results = await session.execute(expression)
         devices = results.scalars().all()
@@ -62,7 +73,7 @@ async def get_desktop_devices(
         expression = select(Desktop)
     elif site:
         expression = select(Desktop).where(Desktop.site.in_(site.split(",")))
-    
+
     async with get_session() as session:
         results = await session.execute(expression)
         devices = results.scalars().all()
@@ -71,10 +82,7 @@ async def get_desktop_devices(
 
 @router.get("/search", response_model=List[SearchResults], status_code=200)
 async def search_inventory(q: str = None):
-    results = {
-        "desktops": [],
-        "network_devices": []
-    }
+    results = {"desktops": [], "network_devices": []}
     if q:
         async with get_session() as session:
             desktop_results = await session.execute(
