@@ -1,4 +1,4 @@
-PROJECT=commissioner
+PROJECT=the-commissioner
 ENVIRONMENT=dev
 
 DB_URL=postgresql+asyncpg://postgres:postgres@db:5432/commissioner
