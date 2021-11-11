@@ -1,17 +1,16 @@
 """init
 
-Revision ID: 4ab1d4b850bd
+Revision ID: 252c7643f4f4
 Revises: 
-Create Date: 2021-11-08 16:17:34.724297
+Create Date: 2021-11-11 08:58:15.512329
 
 """
-from alembic import op
 import sqlalchemy as sa
 import sqlmodel
-
+from alembic import op
 
 # revision identifiers, used by Alembic.
-revision = '4ab1d4b850bd'
+revision = '252c7643f4f4'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -26,9 +25,9 @@ def upgrade():
     sa.Column('site', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
     sa.Column('device_type', sqlmodel.sql.sqltypes.AutoString(), nullable=True),
     sa.Column('platform', sqlmodel.sql.sqltypes.AutoString(), nullable=True),
+    sa.Column('active', sa.Boolean(), nullable=True),
     sa.Column('model', sqlmodel.sql.sqltypes.AutoString(), nullable=True),
     sa.Column('image', sqlmodel.sql.sqltypes.AutoString(), nullable=True),
-    sa.Column('active', sa.Boolean(), nullable=True),
     sa.Column('id', sa.Integer(), nullable=True),
     sa.PrimaryKeyConstraint('id')
     )
@@ -43,11 +42,12 @@ def upgrade():
     op.create_index(op.f('ix_network_platform'), 'network', ['platform'], unique=False)
     op.create_index(op.f('ix_network_site'), 'network', ['site'], unique=False)
     op.create_table('interface',
-    sa.Column('mac', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
     sa.Column('name', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
+    sa.Column('mac', sqlmodel.sql.sqltypes.AutoString(), nullable=True),
     sa.Column('description', sqlmodel.sql.sqltypes.AutoString(), nullable=True),
     sa.Column('vlan', sa.Integer(), nullable=True),
     sa.Column('cidr', sa.Integer(), nullable=True),
+    sa.Column('ip', sqlmodel.sql.sqltypes.AutoString(), nullable=True),
     sa.Column('network_device_id', sa.Integer(), nullable=True),
     sa.Column('id', sa.Integer(), nullable=True),
     sa.ForeignKeyConstraint(['network_device_id'], ['network.id'], ),
@@ -56,6 +56,7 @@ def upgrade():
     op.create_index(op.f('ix_interface_cidr'), 'interface', ['cidr'], unique=False)
     op.create_index(op.f('ix_interface_description'), 'interface', ['description'], unique=False)
     op.create_index(op.f('ix_interface_id'), 'interface', ['id'], unique=False)
+    op.create_index(op.f('ix_interface_ip'), 'interface', ['ip'], unique=False)
     op.create_index(op.f('ix_interface_mac'), 'interface', ['mac'], unique=False)
     op.create_index(op.f('ix_interface_name'), 'interface', ['name'], unique=False)
     op.create_index(op.f('ix_interface_network_device_id'), 'interface', ['network_device_id'], unique=False)
@@ -101,6 +102,7 @@ def downgrade():
     op.drop_index(op.f('ix_interface_network_device_id'), table_name='interface')
     op.drop_index(op.f('ix_interface_name'), table_name='interface')
     op.drop_index(op.f('ix_interface_mac'), table_name='interface')
+    op.drop_index(op.f('ix_interface_ip'), table_name='interface')
     op.drop_index(op.f('ix_interface_id'), table_name='interface')
     op.drop_index(op.f('ix_interface_description'), table_name='interface')
     op.drop_index(op.f('ix_interface_cidr'), table_name='interface')

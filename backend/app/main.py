@@ -1,8 +1,7 @@
 import uvicorn
+from app.api import auth, inventory, ping, tasks
+from app.settings import Settings, get_settings
 from fastapi import FastAPI
-
-from app.settings import get_settings, Settings
-from app.api import inventory, ping, auth
 
 settings: Settings = get_settings()
 
@@ -16,6 +15,7 @@ def create_application() -> FastAPI:
         tags=["inventory"],
     )
     application.include_router(auth.router, prefix="/auth", tags=["auth"])
+    application.include_router(tasks.router, prefix="/tasks", tags=["tasks"])
 
     return application
 

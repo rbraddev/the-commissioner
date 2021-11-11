@@ -1,7 +1,6 @@
-from fastapi import APIRouter, Depends
-
 from app.models.pong import Pong
 from app.settings import Settings, get_settings
+from fastapi import APIRouter, Depends
 
 router = APIRouter()
 

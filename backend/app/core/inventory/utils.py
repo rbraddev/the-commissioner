@@ -1,9 +1,8 @@
 import re
 from typing import *
 
-from httpx import AsyncClient, Response
-
 from app.settings import Settings, get_settings
+from httpx import AsyncClient, Response
 
 settings: Settings = get_settings()
 

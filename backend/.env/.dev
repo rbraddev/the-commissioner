@@ -6,4 +6,12 @@ AUTH_MODE=tacacs
 TACACS_SVR=tacacs
 TACACS_KEY=tac_plus_key
 
+API_USER=ryan
+API_PASSWORD=Cisco123
+
 DB_URL=postgresql+asyncpg://postgres:postgres@db:5432/commissioner
+SYNC_DB_URL=postgresql+psycopg2://postgres:postgres@db:5432/commissioner
+
+REDIS_SERVER=redis
+
+DATA_VLAN=10

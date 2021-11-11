@@ -1,27 +1,23 @@
 from operator import or_
 from typing import *
 
-from fastapi import APIRouter, Depends
-from sqlalchemy.future import select
-from sqlalchemy import or_
-
 from app.core.inventory.tasks import update_inventory
 from app.core.security.utils import get_current_user
-from app.db import get_session
-from app.models.inventory import (
-    NetworkRead,
-    Network,
-    Desktop,
-    DesktopRead,
-    SearchResults,
-)
+from app.db import get_engine, get_session
+from app.models.inventory import (Desktop, DesktopRead,
+                                  DesktopReadWithInterface, Interface, Network,
+                                  NetworkRead, NetworkReadWithInterfaces,
+                                  SearchResults)
 from app.models.token import User
+from fastapi import APIRouter, Depends
+from sqlalchemy.orm import selectinload
+from sqlmodel import Session, or_, select
 
 router = APIRouter()
 
 
 @router.post("/update/network", status_code=201)
-async def start_network_update_task(current_user: User = Depends(get_current_user)):
+async def start_network_update_task():
     """
     Update network inventory DB from SW
     """
@@ -30,8 +26,7 @@ async def start_network_update_task(current_user: User = Depends(get_current_use
 
 
 @router.post("/update/desktop", status_code=201)
-async def start_desktop_update_task(current_user: User = Depends(get_current_user)
-):
+async def start_desktop_update_task():
     """
     Update desktop inventiry DB from SW
     """
@@ -39,36 +34,45 @@ async def start_desktop_update_task(current_user: User = Depends(get_current_use
     return {"message": "task completed"}
 
 
-@router.get("/network", response_model=List[NetworkRead], status_code=200)
+@router.get("/network", response_model=List[NetworkReadWithInterfaces], status_code=200)
 async def get_network_devices(
     site: str = None,
     device_type: str = None,
-):  
+):
     """
     Filter network devices
     """
     expression = None
     if site is None and device_type is None:
-        expression = select(Network)
+        expression = select(Network).options(selectinload(Network.interfaces))
     elif site and device_type:
-        expression = select(Network).where(
-            Network.site.in_(site.split(",")),
-            Network.device_type.in_(device_type.split(",")),
+        expression = (
+            select(Network)
+            .options(selectinload(Network.interfaces))
+            .where(
+                Network.site.in_(site.split(",")),
+                Network.device_type.in_(device_type.split(",")),
+            )
         )
     elif site:
-        expression = select(Network).where(Network.site.in_(site.split(",")))
+        expression = (
+            select(Network)
+            .options(selectinload(Network.interfaces))
+            .where(Network.site.in_(site.split(",")))
+        )
     elif device_type:
-        expression = select(Network).where(
-            Network.device_type.in_(device_type.split(","))
+        expression = (
+            select(Network)
+            .options(selectinload(Network.interfaces))
+            .where(Network.device_type.in_(device_type.split(",")))
         )
 
-    async with get_session() as session:
-        results = await session.execute(expression)
-        devices = results.scalars().all()
+    with Session(get_engine()) as session:
+        devices = session.exec(expression).all()
     return devices
 
 
-@router.get("/desktop", response_model=List[DesktopRead], status_code=200)
+@router.get("/desktop", response_model=List[DesktopReadWithInterface], status_code=200)
 async def get_desktop_devices(
     site: str = None,
 ):
@@ -77,13 +81,20 @@ async def get_desktop_devices(
     """
     expression = None
     if site is None:
-        expression = select(Desktop)
+        expression = select(Desktop).options(
+            selectinload(Desktop.interface).selectinload(Interface.network_device)
+        )
     elif site:
-        expression = select(Desktop).where(Desktop.site.in_(site.split(",")))
+        expression = (
+            select(Desktop)
+            .options(
+                selectinload(Desktop.interface).selectinload(Interface.network_device)
+            )
+            .where(Desktop.site.in_(site.split(",")))
+        )
 
-    async with get_session() as session:
-        results = await session.execute(expression)
-        devices = results.scalars().all()
+    with Session(get_engine()) as session:
+        devices = session.exec(expression).all()
     return devices
 
 
@@ -96,18 +107,18 @@ async def get_site_devices(
     """
     if site is None:
         return []
-    
+
     results = {"desktops": [], "network_devices": []}
-    
-    async with get_session() as session:
-        desktop_results = await session.execute(select(Desktop).where(Desktop.site == site))
-        desktops = desktop_results.scalars().all()
+
+    with Session(get_engine()) as session:
+        desktops = session.exec(select(Desktop).where(Desktop.site == site)).all()
         results.update({"desktops": desktops})
 
-        network_device_results = await session.execute(select(Network).where(Network.site == site))
-        network_devices = network_device_results.scalars().all()
+        network_devices = session.exec(
+            select(Network).where(Network.site == site)
+        ).all()
         results.update({"network_devices": network_devices})
-    
+
     return [results]
 
 
@@ -116,29 +127,44 @@ async def search_inventory(q: str = None):
     """
     Search desktop and network inventory by hostname, ip or mac
     """
-    results = {"desktops": [], "network_devices": []}
+    results = {"desktops": [], "network_devices": [], "interfaces": []}
     if q:
-        async with get_session() as session:
-            desktop_results = await session.execute(
-                select(Desktop).where(
+        with Session(get_engine()) as session:
+            desktops = session.exec(
+                select(Desktop)
+                .options(
+                    selectinload(Desktop.interface).selectinload(
+                        Interface.network_device
+                    )
+                )
+                .where(
                     or_(
                         Desktop.hostname.ilike(f"%{q}%"),
                         Desktop.ip.ilike(f"%{q}%"),
                         Desktop.mac.ilike(f"%{q}%"),
                     )
                 )
-            )
-            desktops = desktop_results.scalars().all()
+            ).all()
             results.update({"desktops": desktops})
 
-            network_device_results = await session.execute(
+            network_devices = session.exec(
                 select(Network).where(
                     or_(
                         Network.hostname.ilike(f"%{q}%"),
                     )
                 )
-            )
-            network_devices = network_device_results.scalars().all()
+            ).all()
             results.update({"network_devices": network_devices})
+            interfaces = session.exec(
+                select(Interface)
+                .options(selectinload(Interface.network_device))
+                .where(
+                    or_(
+                        Interface.ip.ilike(f"%{q}%"),
+                        Interface.mac.ilike(f"%{q}%"),
+                    )
+                )
+            ).all()
+            results.update({"interfaces": interfaces})
 
     return [results]

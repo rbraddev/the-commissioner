@@ -13,3 +13,7 @@ def server_error(detail: str) -> HTTPException:
     return HTTPException(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=detail
     )
+
+
+def invalid_data(detail: str):
+    return HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=detail)

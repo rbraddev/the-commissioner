@@ -1,12 +1,12 @@
 import logging
 
+from app.core.inventory.utils import (pull_desktop_inventory,
+                                      pull_network_inventory)
+from app.db import get_session
+from app.models.inventory import Desktop, DesktopImport, Network, NetworkImport
 from jsondiff import diff
 from sqlalchemy.future import select
 from sqlmodel.main import SQLModelMetaclass
-
-from app.core.inventory.utils import pull_desktop_inventory, pull_network_inventory
-from app.db import get_session
-from app.models.inventory import Desktop, DesktopImport, Network, NetworkImport
 
 log = logging.getLogger("uvicorn")
 

@@ -1,11 +1,10 @@
 import os
 from contextlib import asynccontextmanager
 
+from app.settings import Settings, get_settings
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
-from sqlmodel import SQLModel
-
-from app.settings import Settings, get_settings
+from sqlmodel import SQLModel, create_engine
 
 settings: Settings = get_settings()
 
@@ -23,3 +22,7 @@ async def get_session() -> AsyncSession:
     async_session = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
     async with async_session() as session:
         yield session
+
+
+def get_engine():
+    return create_engine(settings.SYNC_DB_URL, echo=True)

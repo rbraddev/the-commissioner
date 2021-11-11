@@ -1,8 +1,7 @@
 from ipaddress import IPv4Address
 from typing import *
 
-from pydantic import validator
-from pydantic import BaseModel
+from pydantic import BaseModel, validator
 from sqlmodel import Field, Relationship, SQLModel
 
 
@@ -39,30 +38,27 @@ class DesktopBase(DesktopImport):
     interface_id: Optional[int] = Field(default=None, foreign_key="interface.id")
 
 
+class InterfaceBase(SQLModel):
+    name: str
+    mac: Optional[str]
+    description: Optional[str]
+    vlan: Optional[int]
+    cidr: Optional[int]
+    ip: Optional[str]
+
+    network_device_id: Optional[int] = Field(default=None, foreign_key="network.id")
+
+
 class Network(NetworkBase, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
 
     interfaces: List["Interface"] = Relationship(back_populates="network_device")
 
 
-class NetworkRead(NetworkBase):
-    id: int
-
-
-class InterfaceBase(SQLModel):
-    mac: str
-    name: str
-    description: Optional[str]
-    vlan: Optional[int]
-    cidr: Optional[int]
-
-    network_device_id: Optional[int] = Field(default=None, foreign_key="network.id")
-
-
 class Desktop(DesktopBase, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
 
-    interface: List["Interface"] = Relationship(back_populates="desktop")
+    interface: Optional["Interface"] = Relationship(back_populates="desktop")
 
 
 class Interface(InterfaceBase, table=True):
@@ -72,16 +68,20 @@ class Interface(InterfaceBase, table=True):
     desktop: Optional[Desktop] = Relationship(back_populates="interface")
 
 
+class NetworkRead(NetworkBase):
+    id: int
+
+
 class InterfaceRead(InterfaceBase):
     id: int
 
 
-class InterfaceReadWithNetwork(InterfaceRead):
-    network_device: NetworkRead
-
-
 class NetworkReadWithInterfaces(NetworkRead):
     interfaces: Optional[List[InterfaceRead]] = []
+
+
+class InterfaceReadWithNetwork(InterfaceRead):
+    network_device: NetworkRead
 
 
 class DesktopRead(DesktopBase):
@@ -89,7 +89,7 @@ class DesktopRead(DesktopBase):
 
 
 class DesktopReadWithInterface(DesktopRead):
-    interface: InterfaceReadWithNetwork
+    interface: Optional[InterfaceReadWithNetwork]
 
 
 class InterfaceReadWithDesktop(InterfaceBase):
@@ -97,5 +97,16 @@ class InterfaceReadWithDesktop(InterfaceBase):
 
 
 class SearchResults(BaseModel):
-    desktops: List[DesktopRead]
-    network_devices: List[NetworkRead]
+    desktops: List[DesktopReadWithInterface] = []
+    network_devices: List[NetworkRead] = []
+    interfaces: List[InterfaceReadWithNetwork] = []
+
+
+class InterfaceCompare(BaseModel):
+    name: str
+    description: Optional[str] = None
+    ip: Optional[str] = None
+    cidr: Optional[int] = None
+    mac: Optional[str] = None
+    vlan: Optional[int] = None
+    desktop: Optional[str] = None

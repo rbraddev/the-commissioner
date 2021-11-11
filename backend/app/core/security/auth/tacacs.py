@@ -1,9 +1,7 @@
-from tacacs_plus.client import TACACSClient
-
+import app.core.errors as errors
 from app.core.security.auth.base import Auth
 from app.settings import get_settings
-import app.core.errors as errors
-
+from tacacs_plus.client import TACACSClient
 
 settings = get_settings()
 

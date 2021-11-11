@@ -1,15 +1,13 @@
-from datetime import datetime, timedelta
 import importlib
+from datetime import datetime, timedelta
 from typing import Type
 
-from jose import JWTError, jwt
+import app.core.errors as errors
+from app.core.security.auth.base import Auth
+from app.settings import Settings, get_settings
 from fastapi import Depends
 from fastapi.security import OAuth2PasswordBearer
-
-from app.core.security.auth.base import Auth
-import app.core.errors as errors
-from app.settings import get_settings, Settings
-
+from jose import JWTError, jwt
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/token")
 
