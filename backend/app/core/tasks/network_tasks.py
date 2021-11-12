@@ -2,17 +2,17 @@ import asyncio
 from typing import *
 
 from app.core.host import Host
-from app.core.tasks.tracker import TaskTracker, track
+from app.core.tasks.tracker import TaskTracker, track, track_task
 from app.db import get_engine, get_session
 from app.models.inventory import Desktop, Interface, InterfaceCompare, Network
 from jsondiff import diff
 from scrapli.exceptions import ScrapliAuthenticationFailed
 from sqlalchemy.orm import selectinload
 
-# from sqlalchemy.future import select
 from sqlmodel import Session, select
 
 
+@track_task
 async def update_network_interfaces_task(nodeids: List[int], tracker: TaskTracker):
     await tracker.set_status("Running")
     with Session(get_engine()) as session:
@@ -22,7 +22,7 @@ async def update_network_interfaces_task(nodeids: List[int], tracker: TaskTracke
 
     tasks = [
         update_network_interfaces_run(
-            Host(
+            host=Host(
                 hostname=host.hostname,
                 ip=host.ip,
                 platform=host.platform,
@@ -35,8 +35,6 @@ async def update_network_interfaces_task(nodeids: List[int], tracker: TaskTracke
     ]
 
     await asyncio.gather(*tasks)
-    await tracker.set_status("complete")
-    print(await tracker.getall())
 
 
 @track
@@ -49,13 +47,11 @@ async def update_network_interfaces_run(host: Host, tracker: TaskTracker):
             await asyncio.sleep(0.2)
 
         if results == {}:
-            host.task_msg = "Failed retrieving data from device"
-            await tracker.add_failed(host)
+            raise ValueError("Unable to get data from device")
         else:
             await update_interfaces_db(host.nodeid, results)
-    except (ScrapliAuthenticationFailed, OSError):
-        host.task_msg = "Failed retrieving data from device"
-        await tracker.add_failed(host)
+    except (ScrapliAuthenticationFailed, OSError) as exc:
+        raise ConnectionError(exc)
 
 
 async def update_interfaces_db(nodeid: int, interfaces: dict):

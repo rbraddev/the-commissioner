@@ -71,7 +71,7 @@ class Host:
             "hostname": self.hostname,
             "ip": self.ip,
             "nodeid": self.nodeid,
-            "failed_msg": self.task_msg,
+            "failed_msg": self.failed_msg,
         }
 
     def result_dict(self) -> dict:

@@ -1,5 +1,6 @@
 import functools
 import logging
+from time import perf_counter
 from ast import literal_eval
 from dataclasses import dataclass, field
 from itertools import chain
@@ -51,6 +52,10 @@ class TaskTracker:
         failed = await self._con.lrange(f"{self.task_id}:failed", "0", "-1")
         return failed
 
+    async def task_failed(self, msg: str):
+        await self._set({"task_failed_msg": msg})
+        await self.set_status("failed")
+
     async def _get_host_results(self):
         results = await self._con.lrange(f"{self.task_id}:result", "0", "-1")
         return results
@@ -70,19 +75,38 @@ class TaskTracker:
     async def set_total(self, total: str):
         await self._set({"total": str(total)})
 
+    async def set_starttime(self, s_time: float):
+        await self._set({"start": s_time})
+
+    async def set_endtime(self, e_time: float):
+        await self._set({"end": e_time})
+
+    async def _get(self, key):
+        result = await self._con.hget(self.task_id, key)
+        return result
+
     async def _set(self, data: dict) -> None:
         await self._con.hset(self.task_id, mapping=data)
 
+    async def run_time(self) -> float:
+        if await self._get("end"):
+            start = await self._get("start")
+            end = await self._get("end")
+            return float(f"{float(end) - float(start):.2f}")
+        return 0.0
+
     async def getall(self):
         task_data = await self._con.hgetall(self.task_id)
+        task_data.update({"task_failed_msg": await self._get("task_failed_msg")})
         results = await self._get_host_results()
         failed = await self._get_failed()
-        task_data.update({"failed_count": len(failed)})
+        task_data.update({"failed": len(failed)})
+        task_data.update({"run_time": await self.run_time()})
 
         task_dict = {
             "task_data": task_data if task_data else {},
-            "results": [literal_eval(item) for item in results] if results else {},
-            "failed": [literal_eval(item) for item in failed] if failed else {},
+            "results": [literal_eval(item) for item in results] if results else [],
+            "failed": [literal_eval(item) for item in failed] if failed else [],
         }
 
         return task_dict
@@ -106,11 +130,43 @@ async def create_tracker(
     return task
 
 
+def track_task(func):
+    @functools.wraps(func)
+    async def wrapper(**kwargs):
+        tracker: TaskTracker = kwargs["tracker"]
+        await start_task(tracker)
+        try:
+            result = await func(**kwargs)
+        except Exception as exc:
+            result = None
+            await tracker.task_failed(str(exc))
+        await end_task(tracker)
+        return result
+
+    return wrapper
+
+
+async def start_task(tracker: TaskTracker):
+    await tracker.set_status("running")
+    await tracker.set_starttime(perf_counter())
+
+
+async def end_task(tracker: TaskTracker):
+    await tracker.set_endtime(perf_counter())
+    await tracker.set_status("complete")
+
+
 def track(func):
     @functools.wraps(func)
-    async def wrapper(host, **kwargs):
+    async def wrapper(**kwargs):
         tracker: TaskTracker = kwargs["tracker"]
-        result = await func(host, **kwargs)
+        try:
+            result = await func(**kwargs)
+        except Exception as exc:
+            result = None
+            host: Host = kwargs["host"]
+            host.failed_msg = str(exc)
+            await tracker.add_failed(kwargs["host"])
         await tracker.completed()
         return result
 

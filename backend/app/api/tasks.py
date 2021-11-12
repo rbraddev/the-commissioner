@@ -1,11 +1,19 @@
 from aioredis.client import Redis
 from app.core.tasks.network_tasks import update_network_interfaces_task
 from app.core.tasks.tracker import TaskTracker, create_tracker
-from app.models.tasks import TaskSubmitData, TaskSubmitted
+from app.models.tasks import TaskSubmitData, TaskSubmitted, TaskStatus
 from app.redis import get_redis_con
 from fastapi import APIRouter, BackgroundTasks, Depends
 
 router = APIRouter()
+
+
+@router.get("/status/{taskid}", response_model=TaskStatus, status_code=200)
+async def task_status(taskid: str, redis_con: Redis = Depends(get_redis_con)):
+    tracker = TaskTracker(redis_con, task_id=taskid)
+    task_data = await tracker.getall()
+    task_data.update({"task_id": taskid})
+    return task_data
 
 
 @router.post(
