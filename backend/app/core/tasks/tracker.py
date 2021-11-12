@@ -18,6 +18,8 @@ class TaskTracker:
     _con: Redis = field(repr=False)
     task_id: str = field(default=None)
     name: str = field(default=None)
+    task_path: str = field(default=None)
+    tasks_data: dict = field(default=None, repr=False)
 
     async def _init(self):
         if not self.task_id:
@@ -26,6 +28,7 @@ class TaskTracker:
                 raise NoTaskName("Task requires a name")
             task_defaults = {
                 "name": self.name,
+                "path": self.task_path,
                 "status": "pending",
                 "total": 0,
                 "complete": 0,
@@ -90,9 +93,15 @@ class TaskTracker:
 
 
 async def create_tracker(
-    con: Redis, task_id: str = None, name: str = None
+    con: Redis,
+    task_id: str = None,
+    name: str = None,
+    task_path: str = None,
+    task_data: dict = None,
 ) -> TaskTracker:
-    task = TaskTracker(con, task_id=task_id, name=name)
+    task = TaskTracker(
+        con, task_id=task_id, name=name, task_path=task_path, tasks_data=task_data
+    )
     await task._init()
     return task
 

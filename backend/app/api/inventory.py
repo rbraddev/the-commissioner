@@ -4,10 +4,16 @@ from typing import *
 from app.core.inventory.tasks import update_inventory
 from app.core.security.utils import get_current_user
 from app.db import get_engine, get_session
-from app.models.inventory import (Desktop, DesktopRead,
-                                  DesktopReadWithInterface, Interface, Network,
-                                  NetworkRead, NetworkReadWithInterfaces,
-                                  SearchResults)
+from app.models.inventory import (
+    Desktop,
+    DesktopRead,
+    DesktopReadWithInterface,
+    Interface,
+    Network,
+    NetworkRead,
+    NetworkReadWithInterfaces,
+    SearchResults,
+)
 from app.models.token import User
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import selectinload

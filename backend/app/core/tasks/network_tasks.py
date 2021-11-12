@@ -8,11 +8,13 @@ from app.models.inventory import Desktop, Interface, InterfaceCompare, Network
 from jsondiff import diff
 from scrapli.exceptions import ScrapliAuthenticationFailed
 from sqlalchemy.orm import selectinload
+
 # from sqlalchemy.future import select
 from sqlmodel import Session, select
 
 
 async def update_network_interfaces_task(nodeids: List[int], tracker: TaskTracker):
+    await tracker.set_status("Running")
     with Session(get_engine()) as session:
         hosts = session.exec(select(Network).where(Network.nodeid.in_(nodeids))).all()
 
@@ -33,7 +35,7 @@ async def update_network_interfaces_task(nodeids: List[int], tracker: TaskTracke
     ]
 
     await asyncio.gather(*tasks)
-
+    await tracker.set_status("complete")
     print(await tracker.getall())
 
 
@@ -44,7 +46,7 @@ async def update_network_interfaces_run(host: Host, tracker: TaskTracker):
             results = await host.tasks.update_network_interfaces_data()
             if results != {}:
                 break
-            await asyncio.sleep(0.1)
+            await asyncio.sleep(0.2)
 
         if results == {}:
             host.task_msg = "Failed retrieving data from device"
@@ -70,7 +72,6 @@ async def update_interfaces_db(nodeid: int, interfaces: dict):
                     inf for inf in network_device.interfaces if inf.name == interface
                 )
                 updates = interface_updates(db_inf, data)
-                print(updates)
                 if updates:
                     for key, value in updates.items():
                         if key == "desktop":
@@ -92,14 +93,15 @@ async def update_interfaces_db(nodeid: int, interfaces: dict):
                             session.add(db_inf)
                     session.commit()
             else:
+                desktop = data.pop("desktop", None)
                 new_interface = Interface.parse_obj(data)
                 new_interface.network_device = network_device
                 session.add(new_interface)
                 session.commit()
                 session.refresh(new_interface)
-                if data.get("desktop"):
+                if desktop:
                     desktop = session.exec(
-                        select(Desktop).where(Desktop.mac == data.get("desktop"))
+                        select(Desktop).where(Desktop.mac == desktop)
                     ).one()
                     desktop.interface = new_interface
                     session.add(desktop)
@@ -130,6 +132,4 @@ def interface_updates(in_db, current):
             "desktop": in_db.desktop[0].mac if in_db.desktop else None,
         }
     ).dict()
-    print(new_inf)
-    print(db_inf)
     return diff(db_inf, new_inf)

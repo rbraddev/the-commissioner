@@ -1,5 +1,4 @@
-from app.core.security.utils import (create_access_token, get_auth_mode,
-                                     get_current_user)
+from app.core.security.utils import create_access_token, get_auth_mode, get_current_user
 from app.models.token import Token, User
 from app.settings import Settings, get_settings
 from fastapi import APIRouter, Depends

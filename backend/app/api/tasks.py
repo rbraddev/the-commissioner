@@ -17,7 +17,10 @@ async def update_network_interfaces(
     redis_con: Redis = Depends(get_redis_con),
 ):
     tracker: TaskTracker = await create_tracker(
-        redis_con, name="update interface details"
+        redis_con,
+        name="update interface details",
+        task_path="/inventory/network/update_interfaces",
+        task_data=task_data.dict(),
     )
     background_tasks.add_task(
         update_network_interfaces_task, nodeids=task_data.nodeids, tracker=tracker

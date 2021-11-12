@@ -3,8 +3,7 @@ from typing import *
 
 from app.core.host.connections.ssh import PLATFORM, SSH
 from app.core.host.credentials import Credentials
-from app.core.host.errors import (InvalidIPAddress, InvalidPlatform,
-                                  NoTaskListFound)
+from app.core.host.errors import InvalidIPAddress, InvalidPlatform, NoTaskListFound
 from app.core.tasks.host import IOSRTTasks, IOSSWTasks, NXOSTasks
 from app.core.tasks.host.base import Tasks
 from app.settings import Settings, get_settings

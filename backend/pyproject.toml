@@ -15,11 +15,11 @@ asyncpg = "^0.24.0"
 jsondiff = "^1.3.0"
 tacacs_plus = "^2.6"
 python-jose = {version = "^3.3.0", extras = ["cryptography"]}
-scrapli = {version = "^2021.7.30", extras = ["asyncssh", "genie", "netconf"]}
-genie = "^21.10"
+scrapli = {version = "^2021.7.30", extras = ["asyncssh", "netconf"]}
 aioredis = {version = "^2.0.0", extras = ["hiredis"]}
 hiredis = "^2.0.0"
 psycopg2-binary = "^2.9.1"
+pyats = {version = "21.9", extras = ["full"]}
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.2.5"
