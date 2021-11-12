@@ -9,12 +9,11 @@ settings = get_settings()
 class TacacsAuth(Auth):
     concurrency = "sync"
 
-    def authenticate(self) -> None:
+    def authenticate(self) -> bool:
         try:
             client = TACACSClient(
                 host=settings.TACACS_SVR, port=49, secret=settings.TACACS_KEY
             )
-            if not client.authenticate(self.username, self.password).valid:
-                raise errors.unauth_error("Incorrect username or password", "Basic")
+            return client.authenticate(self.username, self.password).valid
         except ConnectionRefusedError:
             raise errors.server_error("Unable to connect to TACACS")

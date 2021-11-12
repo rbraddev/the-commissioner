@@ -1,12 +1,12 @@
 from typing import *
+from datetime import datetime
 
-from sqlalchemy.sql.expression import table
 from sqlmodel import Field, SQLModel
 
 
 class LogBase(SQLModel):
     username: str
-    time: str
+    time: datetime
 
 
 class AuthLogs(LogBase, table=True):

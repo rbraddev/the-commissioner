@@ -21,6 +21,7 @@ class TaskTracker:
     name: str = field(default=None)
     task_path: str = field(default=None)
     tasks_data: dict = field(default=None, repr=False)
+    username: str = field(default=None, repr=False)
 
     async def _init(self):
         if not self.task_id:
@@ -29,6 +30,7 @@ class TaskTracker:
                 raise NoTaskName("Task requires a name")
             task_defaults = {
                 "name": self.name,
+                "username": self.username,
                 "path": self.task_path,
                 "status": "pending",
                 "total": 0,
@@ -80,6 +82,10 @@ class TaskTracker:
 
     async def set_endtime(self, e_time: float):
         await self._set({"end": e_time})
+    
+    async def valid_username(self, username: str) -> bool:
+        task_username = await self._get("username")
+        return task_username == username
 
     async def _get(self, key):
         result = await self._con.hget(self.task_id, key)
@@ -122,9 +128,10 @@ async def create_tracker(
     name: str = None,
     task_path: str = None,
     task_data: dict = None,
+    username: str = None
 ) -> TaskTracker:
     task = TaskTracker(
-        con, task_id=task_id, name=name, task_path=task_path, tasks_data=task_data
+        con, task_id=task_id, name=name, username=username, task_path=task_path, tasks_data=task_data
     )
     await task._init()
     return task

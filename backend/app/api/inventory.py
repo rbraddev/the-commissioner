@@ -14,8 +14,8 @@ from app.models.inventory import (
     NetworkReadWithInterfaces,
     SearchResults,
 )
-from app.models.token import User
-from fastapi import APIRouter, Depends
+from app.models.auth import User
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import selectinload
 from sqlmodel import Session, or_, select
 
@@ -23,19 +23,23 @@ router = APIRouter()
 
 
 @router.post("/update/network", status_code=201)
-async def start_network_update_task():
+async def start_network_update_task(user: User = Depends(get_current_user)):
     """
     Update network inventory DB from SW
     """
+    if user["access_lvl"] < 5:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
     await update_inventory(inventory_type="network")
     return {"message": "task completed"}
 
 
 @router.post("/update/desktop", status_code=201)
-async def start_desktop_update_task():
+async def start_desktop_update_task(user: User = Depends(get_current_user)):
     """
     Update desktop inventiry DB from SW
     """
+    if user["access_lvl"] < 5:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
     await update_inventory(inventory_type="desktop")
     return {"message": "task completed"}
 
@@ -44,6 +48,7 @@ async def start_desktop_update_task():
 async def get_network_devices(
     site: str = None,
     device_type: str = None,
+    user: User = Depends(get_current_user)
 ):
     """
     Filter network devices
@@ -81,6 +86,7 @@ async def get_network_devices(
 @router.get("/desktop", response_model=List[DesktopReadWithInterface], status_code=200)
 async def get_desktop_devices(
     site: str = None,
+    user: User = Depends(get_current_user)
 ):
     """
     Filter desktops
@@ -107,6 +113,7 @@ async def get_desktop_devices(
 @router.get("/site", response_model=List[SearchResults], status_code=200)
 async def get_site_devices(
     site: str = None,
+    user: User = Depends(get_current_user)
 ):
     """
     Get site inventory
@@ -129,7 +136,7 @@ async def get_site_devices(
 
 
 @router.get("/search", response_model=List[SearchResults], status_code=200)
-async def search_inventory(q: str = None):
+async def search_inventory(q: str = None, user: User = Depends(get_current_user)):
     """
     Search desktop and network inventory by hostname, ip or mac
     """

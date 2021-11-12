@@ -1,8 +1,13 @@
 from app.core.security.utils import create_access_token, get_auth_mode, get_current_user
-from app.models.token import Token, User
+from app.core import errors
+from app.db import get_engine
+from app.models.auth import Token, User
+from app.models.logs import AuthLogs
 from app.settings import Settings, get_settings
 from fastapi import APIRouter, Depends
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
+from sqlmodel import Session
+from datetime import datetime
 
 router = APIRouter()
 httpbasic = HTTPBasic()
@@ -16,7 +21,20 @@ async def get_access_token(
     auth_mode = get_auth_mode(settings.AUTH_MODE)
     auth = auth_mode(credentials.username, credentials.password)
 
-    await auth.aauthenticate() if auth_mode.concurrency == "async" else auth.authenticate()
+    authenticated = await auth.aauthenticate() if auth_mode.concurrency == "async" else auth.authenticate()
+
+    with Session(get_engine()) as session:
+        session.add(
+            AuthLogs(
+                time=datetime.now(),
+                username=credentials.username,
+                success=authenticated
+            )
+        )
+        session.commit()
+    
+    if not authenticated:
+        raise errors.unauth_error("Incorrect username or password", "Basic")
 
     access_token = create_access_token(
         data={"sub": credentials.username},
