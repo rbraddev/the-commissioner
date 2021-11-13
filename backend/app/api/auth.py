@@ -45,6 +45,6 @@ async def get_access_token(
     return {"access_token": access_token, "token_type": "bearer"}
 
 
-@router.post("/user", response_model=User)
+@router.get("/user", response_model=User)
 async def current_user(current_user: User = Depends(get_current_user)):
     return current_user
