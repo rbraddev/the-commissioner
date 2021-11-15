@@ -15,4 +15,11 @@ SYNC_DB_URL=postgresql+psycopg2://postgres:postgres@db:5432/commissioner
 
 REDIS_SERVER=redis
 
+USER_LVLS={"admin":10,"engineer":5,"field":3,"servicedesk":1,"readonly":0}
+
+TEMPLATE_DIR=./app/templates
+
+SITE_VLANS=[10]
 DATA_VLAN=10
+
+TASK_DEACTIVATE_SITES=[101,103]

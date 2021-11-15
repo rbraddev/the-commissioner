@@ -1,6 +1,8 @@
+from typing import *
 from abc import ABC, abstractmethod
 
 from app.core.host import connections
+from app.core.utils import render_file
 
 
 class Tasks(ABC):
@@ -39,3 +41,14 @@ class Tasks(ABC):
     async def parse_show_mac(data: dict) -> tuple:
         for k, v in data.items():
             yield (next(iter(v["interfaces"])), {"desktop": k.replace(".", "")})
+
+    async def shutdown_interface(self, interfaces: List[str]):
+        config = render_file("shutdown_interface.j2", interfaces=interfaces)
+        async with self.connection.get_connection() as con:
+            await con.send_configs(config.split("\n"))
+    
+    async def enable_interface(self, interfaces: List[str]):
+        config = render_file("enable_interface.j2", interfaces=interfaces)
+        async with self.connection.get_connection() as con:
+            await con.send_configs(config.split("\n"))
+        

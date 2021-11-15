@@ -36,5 +36,8 @@ class TaskSubmitted(TaskBase):
     task_name: str
 
 
-class TaskSubmitData(BaseModel):
+class TaskSubmitDataNodeId(BaseModel):
     nodeids: List[int]
+
+class TaskSubmitDataSite(BaseModel):
+    site: str

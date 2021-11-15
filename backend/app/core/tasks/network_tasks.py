@@ -8,8 +8,11 @@ from app.models.inventory import Desktop, Interface, InterfaceCompare, Network
 from jsondiff import diff
 from scrapli.exceptions import ScrapliAuthenticationFailed
 from sqlalchemy.orm import selectinload
-
 from sqlmodel import Session, select
+
+from app.settings import Settings, get_settings
+
+settings: Settings = get_settings()
 
 
 @track_task
@@ -21,7 +24,7 @@ async def update_network_interfaces_task(nodeids: List[int], tracker: TaskTracke
     await tracker.set_total(str(len(hosts)))
 
     tasks = [
-        update_network_interfaces_run(
+        update_network_interfaces_device(
             host=Host(
                 hostname=host.hostname,
                 ip=host.ip,
@@ -38,7 +41,7 @@ async def update_network_interfaces_task(nodeids: List[int], tracker: TaskTracke
 
 
 @track
-async def update_network_interfaces_run(host: Host, tracker: TaskTracker):
+async def update_network_interfaces_device(host: Host, tracker: TaskTracker):
     try:
         for _ in range(3):
             results = await host.tasks.update_network_interfaces_data()
@@ -129,3 +132,57 @@ def interface_updates(in_db, current):
         }
     ).dict()
     return diff(db_inf, new_inf)
+
+@track_task
+async def deactivate_site_task(site: str, tracker: TaskTracker):
+    with Session(get_engine()) as session:
+        hosts = session.exec(select(Network).where(Network.site == site, Network.device_type == "switch")).all()
+    
+    if hosts == []:
+        raise ValueError("No hosts found")
+    
+    tasks = [
+        deactivate_site_device(
+            host=Host(
+                hostname=host.hostname,
+                ip=host.ip,
+                platform=host.platform,
+                device_type=host.device_type,
+                nodeid=host.nodeid,
+            ),
+            tracker=tracker
+        )
+        for host in hosts
+    ]
+    asyncio.gather(*tasks)
+
+@track
+async def deactivate_site_device(host: Host, tracker: TaskTracker):
+    await host.tasks.shutdown_interface([f"vlan{vlan}" for vlan in settings.SITE_VLANS])
+
+@track_task
+async def activate_site_task(site: str, tracker: TaskTracker):
+    with Session(get_engine()) as session:
+        hosts = session.exec(select(Network).where(Network.site == site, Network.device_type == "switch")).all()
+    
+    if hosts == []:
+        raise ValueError("No hosts found")
+    
+    tasks = [
+        activate_site_device(
+            host=Host(
+                hostname=host.hostname,
+                ip=host.ip,
+                platform=host.platform,
+                device_type=host.device_type,
+                nodeid=host.nodeid,
+            ),
+            tracker=tracker
+        )
+        for host in hosts
+    ]
+    asyncio.gather(*tasks)
+
+@track
+async def activate_site_device(host: Host, tracker: TaskTracker):
+    await host.tasks.enable_interface([f"vlan{vlan}" for vlan in settings.SITE_VLANS])

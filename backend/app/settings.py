@@ -1,4 +1,5 @@
-import ast
+from typing import *
+from ast import literal_eval
 import os
 import secrets
 from functools import lru_cache
@@ -24,11 +25,17 @@ class Settings(BaseSettings):
     API_USER: str = os.environ.get("API_USER")
     API_PASSWORD: str = os.environ.get("API_PASSWORD")
 
-    USER_LVLS: dict = {"admin": 10, "engineer": 5, "servicedesk": 1, "readonly": 0}
+    USER_LVLS: Dict[str, int] = os.environ.get("USER_LVLS")
 
     REDIS_SERVER: str = os.environ.get("REDIS_SERVER")
 
+    TEMPLATE_DIR:str = os.environ.get("TEMPLATE_DIR", "./app/templates")
+
+    SITE_VLANS: List[int] = literal_eval(os.environ.get("SITE_VLANS"))
+
     DATA_VLAN: int = os.environ.get("DATA_VLAN")
+
+    TASK_DEACTIVATE_SITES: List[str] = literal_eval(os.environ.get("TASK_DEACTIVATE_SITES"))
 
 
 @lru_cache
