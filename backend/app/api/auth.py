@@ -42,7 +42,14 @@ async def get_access_token(
         key=settings.AUTH_KEY,
         algorithm=settings.TOKEN_ALGORITHM,
     )
-    return {"access_token": access_token, "token_type": "bearer"}
+    return {
+        "access_token": access_token, 
+        "token_type": "bearer",
+        "userdata": {
+            "username": credentials.username,
+            "access_lvl": settings.USER_LVLS.get(credentials.username)
+        }
+    }
 
 
 @router.get("/user", response_model=User)

@@ -1,5 +1,6 @@
 from aioredis.client import Redis
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
+from fastapi.concurrency import run_in_threadpool
 from starlette.status import HTTP_403_FORBIDDEN
 
 from app.core.security.utils import get_current_user
@@ -43,7 +44,9 @@ async def update_network_interfaces(
         task_data=task_data.dict(),
         username=user["username"]
     )
-    background_tasks.add_task(
-        update_network_interfaces_task, nodeids=task_data.nodeids, tracker=tracker
-    )
+    # background_tasks.add_task(
+    #     update_network_interfaces_task, nodeids=task_data.nodeids, tracker=tracker
+    # )
+    await run_in_threadpool(update_network_interfaces(nodeids=task_data.nodeids, tracker=tracker))
+    
     return {"task_id": tracker.task_id, "task_name": "Update Network Interface Details"}
