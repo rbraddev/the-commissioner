@@ -29,13 +29,15 @@ class Settings(BaseSettings):
 
     REDIS_SERVER: str = os.environ.get("REDIS_SERVER")
 
-    TEMPLATE_DIR:str = os.environ.get("TEMPLATE_DIR", "./app/templates")
+    TEMPLATE_DIR: str = os.environ.get("TEMPLATE_DIR", "./app/templates")
 
     SITE_VLANS: List[int] = literal_eval(os.environ.get("SITE_VLANS"))
 
     DATA_VLAN: int = os.environ.get("DATA_VLAN")
 
-    TASK_DEACTIVATE_SITES: List[str] = literal_eval(os.environ.get("TASK_DEACTIVATE_SITES"))
+    TASK_DEACTIVATE_SITES: List[str] = literal_eval(
+        os.environ.get("TASK_DEACTIVATE_SITES")
+    )
 
 
 @lru_cache

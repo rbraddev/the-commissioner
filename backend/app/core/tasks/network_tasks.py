@@ -133,14 +133,17 @@ def interface_updates(in_db, current):
     ).dict()
     return diff(db_inf, new_inf)
 
+
 @track_task
 async def deactivate_site_task(site: str, tracker: TaskTracker):
     with Session(get_engine()) as session:
-        hosts = session.exec(select(Network).where(Network.site == site, Network.device_type == "switch")).all()
-    
+        hosts = session.exec(
+            select(Network).where(Network.site == site, Network.device_type == "switch")
+        ).all()
+
     if hosts == []:
         raise ValueError("No hosts found")
-    
+
     tasks = [
         deactivate_site_device(
             host=Host(
@@ -150,24 +153,28 @@ async def deactivate_site_task(site: str, tracker: TaskTracker):
                 device_type=host.device_type,
                 nodeid=host.nodeid,
             ),
-            tracker=tracker
+            tracker=tracker,
         )
         for host in hosts
     ]
     asyncio.gather(*tasks)
 
+
 @track
 async def deactivate_site_device(host: Host, tracker: TaskTracker):
     await host.tasks.shutdown_interface([f"vlan{vlan}" for vlan in settings.SITE_VLANS])
 
+
 @track_task
 async def activate_site_task(site: str, tracker: TaskTracker):
     with Session(get_engine()) as session:
-        hosts = session.exec(select(Network).where(Network.site == site, Network.device_type == "switch")).all()
-    
+        hosts = session.exec(
+            select(Network).where(Network.site == site, Network.device_type == "switch")
+        ).all()
+
     if hosts == []:
         raise ValueError("No hosts found")
-    
+
     tasks = [
         activate_site_device(
             host=Host(
@@ -177,11 +184,12 @@ async def activate_site_task(site: str, tracker: TaskTracker):
                 device_type=host.device_type,
                 nodeid=host.nodeid,
             ),
-            tracker=tracker
+            tracker=tracker,
         )
         for host in hosts
     ]
     asyncio.gather(*tasks)
+
 
 @track
 async def activate_site_device(host: Host, tracker: TaskTracker):

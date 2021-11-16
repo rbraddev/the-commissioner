@@ -14,14 +14,14 @@ def create_application() -> FastAPI:
         "http://localhost:8080",
         "https://localhost:8080",
         "http://dashboard.networkdev.co.uk",
-        "https://dashboard.networkdev.co.uk"
+        "https://dashboard.networkdev.co.uk",
     ]
     application.add_middleware(
         CORSMiddleware,
         allow_origins=origins,
         allow_credentials=True,
         allow_methods=["*"],
-        allow_headers=["*"]
+        allow_headers=["*"],
     )
     application.include_router(ping.router)
     application.include_router(

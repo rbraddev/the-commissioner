@@ -82,7 +82,7 @@ class TaskTracker:
 
     async def set_endtime(self, e_time: float):
         await self._set({"end": e_time})
-    
+
     async def valid_username(self, username: str) -> bool:
         task_username = await self._get("username")
         return task_username == username
@@ -128,10 +128,15 @@ async def create_tracker(
     name: str = None,
     task_path: str = None,
     task_data: dict = None,
-    username: str = None
+    username: str = None,
 ) -> TaskTracker:
     task = TaskTracker(
-        con, task_id=task_id, name=name, username=username, task_path=task_path, tasks_data=task_data
+        con,
+        task_id=task_id,
+        name=name,
+        username=username,
+        task_path=task_path,
+        tasks_data=task_data,
     )
     await task._init()
     return task

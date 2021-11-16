@@ -21,18 +21,22 @@ async def get_access_token(
     auth_mode = get_auth_mode(settings.AUTH_MODE)
     auth = auth_mode(credentials.username, credentials.password)
 
-    authenticated = await auth.aauthenticate() if auth_mode.concurrency == "async" else auth.authenticate()
+    authenticated = (
+        await auth.aauthenticate()
+        if auth_mode.concurrency == "async"
+        else auth.authenticate()
+    )
 
     with Session(get_engine()) as session:
         session.add(
             AuthLogs(
                 time=datetime.now(),
                 username=credentials.username,
-                success=authenticated
+                success=authenticated,
             )
         )
         session.commit()
-    
+
     if not authenticated:
         raise errors.unauth_error("Incorrect username or password", "Basic")
 
@@ -43,12 +47,12 @@ async def get_access_token(
         algorithm=settings.TOKEN_ALGORITHM,
     )
     return {
-        "access_token": access_token, 
+        "access_token": access_token,
         "token_type": "bearer",
         "userdata": {
             "username": credentials.username,
-            "access_lvl": settings.USER_LVLS.get(credentials.username)
-        }
+            "access_lvl": settings.USER_LVLS.get(credentials.username),
+        },
     }
 
 

@@ -46,9 +46,7 @@ async def start_desktop_update_task(user: User = Depends(get_current_user)):
 
 @router.get("/network", response_model=List[NetworkReadWithInterfaces], status_code=200)
 async def get_network_devices(
-    site: str = None,
-    device_type: str = None,
-    user: User = Depends(get_current_user)
+    site: str = None, device_type: str = None, user: User = Depends(get_current_user)
 ):
     """
     Filter network devices
@@ -84,10 +82,7 @@ async def get_network_devices(
 
 
 @router.get("/desktop", response_model=List[DesktopReadWithInterface], status_code=200)
-async def get_desktop_devices(
-    site: str = None,
-    user: User = Depends(get_current_user)
-):
+async def get_desktop_devices(site: str = None, user: User = Depends(get_current_user)):
     """
     Filter desktops
     """
@@ -111,10 +106,7 @@ async def get_desktop_devices(
 
 
 @router.get("/site", response_model=List[SearchResults], status_code=200)
-async def get_site_devices(
-    site: str = None,
-    user: User = Depends(get_current_user)
-):
+async def get_site_devices(site: str = None, user: User = Depends(get_current_user)):
     """
     Get site inventory
     """
@@ -124,7 +116,15 @@ async def get_site_devices(
     results = {"desktops": [], "network_devices": []}
 
     with Session(get_engine()) as session:
-        desktops = session.exec(select(Desktop).where(Desktop.site == site)).all()
+        desktops = session.exec(
+            select(Desktop)
+            .options(
+                    selectinload(Desktop.interface).selectinload(
+                        Interface.network_device
+                    )
+            )
+            .where(Desktop.site == site)
+        ).all()
         results.update({"desktops": desktops})
 
         network_devices = session.exec(

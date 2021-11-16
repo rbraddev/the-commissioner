@@ -42,13 +42,14 @@ class Tasks(ABC):
         for k, v in data.items():
             yield (next(iter(v["interfaces"])), {"desktop": k.replace(".", "")})
 
+    async def _send_config(self, config: str):
+        async with self.connection.get_connection() as con:
+            await con.send_configs(config.split("\n"))
+
     async def shutdown_interface(self, interfaces: List[str]):
         config = render_file("shutdown_interface.j2", interfaces=interfaces)
-        async with self.connection.get_connection() as con:
-            await con.send_configs(config.split("\n"))
-    
+        await self._send_config(config)
+
     async def enable_interface(self, interfaces: List[str]):
         config = render_file("enable_interface.j2", interfaces=interfaces)
-        async with self.connection.get_connection() as con:
-            await con.send_configs(config.split("\n"))
-        
+        await self._send_config(config)
