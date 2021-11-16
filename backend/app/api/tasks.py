@@ -69,7 +69,7 @@ async def update_network_interfaces(
     return {"task_id": tracker.task_id, "task_name": "Update Network Interface Details"}
 
 
-@router.post("/network/deactivate_site", status_code=201)
+@router.post("/network/deactivate_site", response_model=TaskSubmitted, status_code=201)
 async def deactivate_site(
     task_data: TaskSubmitDataSite,
     redis_con: Redis = Depends(get_redis_con),
@@ -98,7 +98,7 @@ async def deactivate_site(
     }
 
 
-@router.post("/network/activate_site", status_code=201)
+@router.post("/network/activate_site", response_model=TaskSubmitted, status_code=201)
 async def activate_site(
     task_data: TaskSubmitDataSite,
     redis_con: Redis = Depends(get_redis_con),
