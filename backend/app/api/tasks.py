@@ -1,5 +1,5 @@
 from aioredis.client import Redis
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status, Request
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status, WebSocket
 from fastapi.concurrency import run_in_threadpool
 from starlette.status import HTTP_403_FORBIDDEN
 
@@ -16,6 +16,7 @@ from app.models.tasks import (
     TaskSubmitDataSite,
     TaskSubmitted,
     TaskStatus,
+    TaskSiteList
 )
 from app.models.auth import User
 from app.redis import get_redis_con
@@ -24,6 +25,14 @@ from app.settings import Settings, get_settings
 settings: Settings = get_settings()
 router = APIRouter()
 
+
+@router.websocket("/ws")
+async def tasks_websocket(websocket: WebSocket, task_id: int):
+    await websocket.accept()
+    while True:
+        data = await websocket.receive_text()
+        print(data)
+        await websocket.send_text(f"Message text was: {data}")
 
 @router.get("/status/{taskid}", response_model=TaskStatus, status_code=200)
 async def task_status(
@@ -59,12 +68,12 @@ async def update_network_interfaces(
         task_data=task_data.dict(),
         username=user["username"],
     )
-    # background_tasks.add_task(
-    #     update_network_interfaces_task, nodeids=task_data.nodeids, tracker=tracker
-    # )
-    await run_in_threadpool(
-        update_network_interfaces_task(nodeids=task_data.nodeids, tracker=tracker)
+    background_tasks.add_task(
+        update_network_interfaces_task, nodeids=task_data.nodeids, tracker=tracker
     )
+    # await run_in_threadpool(
+    #     update_network_interfaces_task(nodeids=task_data.nodeids, tracker=tracker)
+    # )
 
     return {"task_id": tracker.task_id, "task_name": "Update Network Interface Details"}
 
@@ -97,6 +106,9 @@ async def deactivate_site(
         "task_name": f"Deactivate Site {task_data.site}",
     }
 
+@router.get("/network/activate_site", response_model=TaskSiteList, status_code=200)
+async def get_activate_sites():
+    return settings.TASK_DEACTIVATE_SITES
 
 @router.post("/network/activate_site", response_model=TaskSubmitted, status_code=201)
 async def activate_site(

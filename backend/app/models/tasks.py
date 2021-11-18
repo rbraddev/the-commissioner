@@ -42,3 +42,7 @@ class TaskSubmitDataNodeId(BaseModel):
 
 class TaskSubmitDataSite(BaseModel):
     site: str
+
+
+class TaskSiteList(BaseModel):
+    sites: List[int]
