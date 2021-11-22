@@ -1,6 +1,8 @@
 import functools
 import logging
+import asyncio
 from time import perf_counter
+from datetime import datetime
 from ast import literal_eval
 from dataclasses import dataclass, field
 from itertools import chain
@@ -8,8 +10,12 @@ from typing import *
 from uuid import uuid4
 
 from aioredis.client import Redis
+from sqlmodel import Session
+
 from app.core.host import Host
 from app.core.tasks.errors import NoTaskFound, NoTaskName
+from app.db import get_engine
+from app.models.logs import TaskLogs
 
 log = logging.getLogger("uvicorn")
 
@@ -37,12 +43,26 @@ class TaskTracker:
                 "complete": 0,
             }
             await self._set(task_defaults)
+            self.log_task()
         else:
             task_data: dict = await self.getall()
             if task_data:
                 self.name = task_data.get("name")
             else:
                 raise NoTaskFound("No tasks found with Task ID provided")
+    
+    def log_task(self):
+        with Session(get_engine()) as session:
+            session.add(
+                TaskLogs(
+                    time=datetime.now(),
+                    username=self.username,
+                    taskname=self.name,
+                    task_path=self.task_path
+                    
+                )
+            )
+            session.commit()
 
     async def add_failed(self, host: Host):
         await self._con.lpush(f"{self.task_id}:failed", str(host.failed_dict()))
@@ -63,7 +83,7 @@ class TaskTracker:
         return results
 
     async def completed(self):
-        await self._con.hincrby(self.task_id, "complete", "1")
+        await self._con.hincrby(self.task_id, "complete", 1)
 
     async def set_status(self, status: str):
         await self._set({"status": status})
@@ -74,8 +94,8 @@ class TaskTracker:
     async def set_host_status(self, result: dict):
         await self._con.lpush(f"{self.task_id}:result", str(result))
 
-    async def set_total(self, total: str):
-        await self._set({"total": str(total)})
+    async def set_total(self, total: int):
+        await self._set({"total": total})
 
     async def set_starttime(self, s_time: float):
         await self._set({"start": s_time})
@@ -110,6 +130,7 @@ class TaskTracker:
         task_data.update({"run_time": await self.run_time()})
 
         task_dict = {
+            "task_id": self.task_id,
             "task_data": task_data if task_data else {},
             "results": [literal_eval(item) for item in results] if results else [],
             "failed": [literal_eval(item) for item in failed] if failed else [],
@@ -152,11 +173,16 @@ def track_task(func):
         except Exception as exc:
             result = None
             await tracker.task_failed(str(exc))
-        await end_task(tracker)
-        return result
+        asyncio.create_task(track_complete(tracker))
+        return result    
 
     return wrapper
 
+
+async def track_complete(tracker: TaskTracker):
+    while await tracker.get("status") != "complete":
+        if int(await tracker.get("complete")) == int(await tracker.get("total")):
+            await end_task(tracker) 
 
 async def start_task(tracker: TaskTracker):
     await tracker.set_status("running")
@@ -172,11 +198,12 @@ def track(func):
     @functools.wraps(func)
     async def wrapper(**kwargs):
         tracker: TaskTracker = kwargs["tracker"]
+        host: Host = kwargs["host"]
         try:
             result = await func(**kwargs)
+            await tracker.add_host_result(host)
         except Exception as exc:
             result = None
-            host: Host = kwargs["host"]
             host.failed_msg = str(exc)
             await tracker.add_failed(kwargs["host"])
         await tracker.completed()

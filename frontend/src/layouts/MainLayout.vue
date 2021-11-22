@@ -30,7 +30,7 @@
           Inventory
         </q-item-label>
 
-        <DrawLink
+        <DrawerLink
           v-for="link in inventoryLinks"
           :key="link.title"
           v-bind="link"
@@ -43,7 +43,7 @@
           Tasks
         </q-item-label>
 
-        <DrawLink
+        <DrawerLink
           v-for="link in taskLinks"
           :key="link.title"
           v-bind="link"
@@ -63,7 +63,7 @@
 </template>
 
 <script>
-import DrawLink from 'components/DrawLink'
+import DrawerLink from 'components/DrawerLink'
 import LogoutBtn from 'components/LogoutBtn'
 import { useStore } from 'vuex'
 import { api } from 'boot/axios'
@@ -83,7 +83,7 @@ const taskList = [
   {
     title: 'Site Activation/Deactivation',
     caption: 'Activate/Deactivate Site',
-    icon: 'school',
+    icon: 'business',
     link: '/dashboard/tasks/site_activation',
     access_lvl: 2
   }
@@ -95,7 +95,7 @@ export default defineComponent({
   name: 'MainLayout',
 
   components: {
-    DrawLink,
+    DrawerLink,
     LogoutBtn
   },
 

@@ -2,7 +2,7 @@ import asyncio
 from typing import *
 
 from app.core.host import Host
-from app.core.tasks.tracker import TaskTracker, track, track_task
+from app.core.tasks.tracker import TaskTracker, track, track_task, end_task
 from app.db import get_engine, get_session
 from app.models.inventory import Desktop, Interface, InterfaceCompare, Network
 from jsondiff import diff
@@ -21,7 +21,7 @@ async def update_network_interfaces_task(nodeids: List[int], tracker: TaskTracke
     with Session(get_engine()) as session:
         hosts = session.exec(select(Network).where(Network.nodeid.in_(nodeids))).all()
 
-    await tracker.set_total(str(len(hosts)))
+    await tracker.set_total(len(hosts))
 
     tasks = [
         update_network_interfaces_device(
@@ -143,6 +143,8 @@ async def deactivate_site_task(site: str, tracker: TaskTracker):
 
     if hosts == []:
         raise ValueError("No hosts found")
+    
+    await tracker.set_total(len(hosts))
 
     tasks = [
         deactivate_site_device(
@@ -174,6 +176,8 @@ async def activate_site_task(site: str, tracker: TaskTracker):
 
     if hosts == []:
         raise ValueError("No hosts found")
+    
+    await tracker.set_total(len(hosts))
 
     tasks = [
         activate_site_device(
@@ -194,3 +198,36 @@ async def activate_site_task(site: str, tracker: TaskTracker):
 @track
 async def activate_site_device(host: Host, tracker: TaskTracker):
     await host.tasks.enable_interface([f"vlan{vlan}" for vlan in settings.SITE_VLANS])
+
+
+@track_task
+async def get_site_status_task(site: str, tracker: TaskTracker):
+    with Session(get_engine()) as session:
+        hosts = session.exec(
+            select(Network).where(Network.site == site, Network.device_type == "switch")
+        ).all()
+    
+    if hosts == []:
+        raise ValueError("No hosts found")
+    
+    await tracker.set_total(len(hosts))
+
+    tasks = [
+        get_site_status_host(
+            host=Host(
+                hostname=host.hostname,
+                ip=host.ip,
+                platform=host.platform,
+                device_type=host.device_type,
+                nodeid=host.nodeid,
+            ),
+            tracker=tracker,
+        )
+        for host in hosts
+    ]
+    asyncio.gather(*tasks)
+
+
+@track
+async def get_site_status_host(host: Host, tracker: TaskTracker):
+    host.result = await host.tasks.interface_vlan_status([f"Vlan{vlan}" for vlan in settings.SITE_VLANS])
