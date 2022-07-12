@@ -1,14 +1,6 @@
 version: '3.8'
 
 services:
-  proxy:
-    container_name: proxy
-    image: caddy:alpine
-    ports:
-      - "8080:80"
-    volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile  
-
   api:
     container_name: api
     build:
@@ -33,14 +25,6 @@ services:
       - POSTGRES_DB=commissioner
     volumes:
       - pgdb:/var/lib/postgresql/data
-
-  ui:
-    container_name: ui
-    build:
-      context: .
-      dockerfile: ./frontend/docker/Dockerfile
-    ports:
-      - 8081:80
 
   redis:
     container_name: redis
