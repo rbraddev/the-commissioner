@@ -6,7 +6,6 @@ from functools import lru_cache
 
 from pydantic import BaseSettings
 
-
 class Settings(BaseSettings):
     PROJECT: str = os.getenv("PROJECT", "FastAPI")
     ENVIRONMENT: str = os.getenv("ENVIRONMENT", "dev")
@@ -31,14 +30,11 @@ class Settings(BaseSettings):
 
     TEMPLATE_DIR: str = os.environ.get("TEMPLATE_DIR", "./app/templates")
 
-    SITE_VLANS: List[int] = literal_eval(os.environ.get("SITE_VLANS"))
+    SITE_VLANS: List[int] = literal_eval(os.environ.get("SITE_VLANS")) if os.environ.get("SITE_VLANS") else []
 
     DATA_VLAN: int = os.environ.get("DATA_VLAN")
 
-    TASK_DEACTIVATE_SITES: List[str] = literal_eval(
-        os.environ.get("TASK_DEACTIVATE_SITES")
-    )
-
+    TASK_DEACTIVATE_SITES: List[str] = literal_eval(os.environ.get("TASK_DEACTIVATE_SITES")) if os.environ.get("TASK_DEACTIVATE_SITES") else []
 
 @lru_cache
 def get_settings() -> BaseSettings:

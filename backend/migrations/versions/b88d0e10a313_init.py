@@ -30,9 +30,7 @@ def upgrade():
     op.create_index(op.f("ix_authlogs_id"), "authlogs", ["id"], unique=False)
     op.create_index(op.f("ix_authlogs_success"), "authlogs", ["success"], unique=False)
     op.create_index(op.f("ix_authlogs_time"), "authlogs", ["time"], unique=False)
-    op.create_index(
-        op.f("ix_authlogs_username"), "authlogs", ["username"], unique=False
-    )
+    op.create_index(op.f("ix_authlogs_username"), "authlogs", ["username"], unique=False)
     op.create_table(
         "network",
         sa.Column("hostname", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
@@ -48,9 +46,7 @@ def upgrade():
         sa.PrimaryKeyConstraint("id"),
     )
     op.create_index(op.f("ix_network_active"), "network", ["active"], unique=False)
-    op.create_index(
-        op.f("ix_network_device_type"), "network", ["device_type"], unique=False
-    )
+    op.create_index(op.f("ix_network_device_type"), "network", ["device_type"], unique=False)
     op.create_index(op.f("ix_network_hostname"), "network", ["hostname"], unique=False)
     op.create_index(op.f("ix_network_id"), "network", ["id"], unique=False)
     op.create_index(op.f("ix_network_image"), "network", ["image"], unique=False)
@@ -69,16 +65,10 @@ def upgrade():
         sa.PrimaryKeyConstraint("id"),
     )
     op.create_index(op.f("ix_tasklogs_id"), "tasklogs", ["id"], unique=False)
-    op.create_index(
-        op.f("ix_tasklogs_task_path"), "tasklogs", ["task_path"], unique=False
-    )
-    op.create_index(
-        op.f("ix_tasklogs_taskname"), "tasklogs", ["taskname"], unique=False
-    )
+    op.create_index(op.f("ix_tasklogs_task_path"), "tasklogs", ["task_path"], unique=False)
+    op.create_index(op.f("ix_tasklogs_taskname"), "tasklogs", ["taskname"], unique=False)
     op.create_index(op.f("ix_tasklogs_time"), "tasklogs", ["time"], unique=False)
-    op.create_index(
-        op.f("ix_tasklogs_username"), "tasklogs", ["username"], unique=False
-    )
+    op.create_index(op.f("ix_tasklogs_username"), "tasklogs", ["username"], unique=False)
     op.create_table(
         "interface",
         sa.Column("name", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
@@ -96,9 +86,7 @@ def upgrade():
         sa.PrimaryKeyConstraint("id"),
     )
     op.create_index(op.f("ix_interface_cidr"), "interface", ["cidr"], unique=False)
-    op.create_index(
-        op.f("ix_interface_description"), "interface", ["description"], unique=False
-    )
+    op.create_index(op.f("ix_interface_description"), "interface", ["description"], unique=False)
     op.create_index(op.f("ix_interface_id"), "interface", ["id"], unique=False)
     op.create_index(op.f("ix_interface_ip"), "interface", ["ip"], unique=False)
     op.create_index(op.f("ix_interface_mac"), "interface", ["mac"], unique=False)
@@ -131,9 +119,7 @@ def upgrade():
     op.create_index(op.f("ix_desktop_cidr"), "desktop", ["cidr"], unique=False)
     op.create_index(op.f("ix_desktop_hostname"), "desktop", ["hostname"], unique=False)
     op.create_index(op.f("ix_desktop_id"), "desktop", ["id"], unique=False)
-    op.create_index(
-        op.f("ix_desktop_interface_id"), "desktop", ["interface_id"], unique=False
-    )
+    op.create_index(op.f("ix_desktop_interface_id"), "desktop", ["interface_id"], unique=False)
     op.create_index(op.f("ix_desktop_ip"), "desktop", ["ip"], unique=False)
     op.create_index(op.f("ix_desktop_mac"), "desktop", ["mac"], unique=False)
     op.create_index(op.f("ix_desktop_nodeid"), "desktop", ["nodeid"], unique=False)

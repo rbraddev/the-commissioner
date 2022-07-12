@@ -21,11 +21,7 @@ async def get_access_token(
     auth_mode = get_auth_mode(settings.AUTH_MODE)
     auth = auth_mode(credentials.username, credentials.password)
 
-    authenticated = (
-        await auth.aauthenticate()
-        if auth_mode.concurrency == "async"
-        else auth.authenticate()
-    )
+    authenticated = await auth.aauthenticate() if auth_mode.concurrency == "async" else auth.authenticate()
 
     with Session(get_engine()) as session:
         session.add(

@@ -36,10 +36,7 @@ async def update_inventory(inventory_type: str) -> None:
 
     async with get_session() as session:
         results: list = await session.execute(select(inventory["node_type"]))
-        db_inventory = [
-            inventory["import_model"].from_orm(item).dict()
-            for item in results.scalars().all()
-        ]
+        db_inventory = [inventory["import_model"].from_orm(item).dict() for item in results.scalars().all()]
 
     for sw_device in sw_inventory:
         if sw_device["nodeid"] not in (device["nodeid"] for device in db_inventory):
@@ -47,11 +44,7 @@ async def update_inventory(inventory_type: str) -> None:
             continue
 
         try:
-            db_device = next(
-                device
-                for device in db_inventory
-                if device["nodeid"] == sw_device["nodeid"]
-            )
+            db_device = next(device for device in db_inventory if device["nodeid"] == sw_device["nodeid"])
             await update_device(sw_device, db_device, inventory["node_type"])
             continue
         except StopIteration:
@@ -72,9 +65,7 @@ async def add_device(device: dict, model: SQLModelMetaclass):
 async def update_device(sw_device: dict, db_device: dict, model: SQLModelMetaclass):
     updates = diff(db_device, sw_device)
     async with get_session() as session:
-        results = await session.execute(
-            select(model).where(model.nodeid == db_device["nodeid"])
-        )
+        results = await session.execute(select(model).where(model.nodeid == db_device["nodeid"]))
         device = results.scalars().one()
         for key, value in updates.items():
             setattr(device, key, value)
@@ -84,9 +75,7 @@ async def update_device(sw_device: dict, db_device: dict, model: SQLModelMetacla
 
 async def set_inactive(device: dict, model: SQLModelMetaclass):
     async with get_session() as session:
-        results = await session.execute(
-            select(model).where(model.nodeid == device["nodeid"])
-        )
+        results = await session.execute(select(model).where(model.nodeid == device["nodeid"]))
         device = results.scalars().one()
         device.active = False
         session.add(device)

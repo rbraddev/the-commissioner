@@ -28,9 +28,7 @@ class IOSSWTasks(Tasks):
         macs = response[2].genie_parse_output()
         if macs == []:
             return {}
-        async for record in self.parse_show_mac(
-            macs["mac_table"]["vlans"][str(settings.DATA_VLAN)]["mac_addresses"]
-        ):
+        async for record in self.parse_show_mac(macs["mac_table"]["vlans"][str(settings.DATA_VLAN)]["mac_addresses"]):
             return_data[record[0]].update(record[1])
 
         return return_data

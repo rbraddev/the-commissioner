@@ -48,10 +48,7 @@ async def start_desktop_update_task(user: User = Depends(get_current_user)):
 
 @router.get("/network", response_model=List[NetworkReadWithInterfaces], status_code=200)
 async def get_network_devices(
-    site: str = None,
-    device_type: str = None,
-    nodeids: str = None,
-    user: User = Depends(get_current_user)
+    site: str = None, device_type: str = None, nodeids: str = None, user: User = Depends(get_current_user)
 ):
     """
     Filter network devices
@@ -59,9 +56,11 @@ async def get_network_devices(
     expression = None
     if nodeids:
         try:
-            nodelist = [int(node) for node in nodeids.split(',')]
+            nodelist = [int(node) for node in nodeids.split(",")]
         except ValueError:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="nodeid must be comma separated ids, e.g 100,101,102")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST, detail="nodeid must be comma separated ids, e.g 100,101,102"
+            )
         expression = select(Network).options(selectinload(Network.interfaces)).where(Network.id.in_(nodelist))
     elif site is None and device_type is None:
         expression = select(Network).options(selectinload(Network.interfaces))
@@ -75,11 +74,7 @@ async def get_network_devices(
             )
         )
     elif site:
-        expression = (
-            select(Network)
-            .options(selectinload(Network.interfaces))
-            .where(Network.site.in_(site.split(",")))
-        )
+        expression = select(Network).options(selectinload(Network.interfaces)).where(Network.site.in_(site.split(",")))
     elif device_type:
         expression = (
             select(Network)
@@ -93,32 +88,29 @@ async def get_network_devices(
 
 
 @router.get("/desktop", response_model=List[DesktopReadWithInterface], status_code=200)
-async def get_desktop_devices(
-    site: str = None,
-    nodeids: str = None,
-    user: User = Depends(get_current_user)):
+async def get_desktop_devices(site: str = None, nodeids: str = None, user: User = Depends(get_current_user)):
     """
     Filter desktops
     """
     expression = None
     if nodeids:
         try:
-            nodelist = [int(node) for node in nodeids.split(',')]
+            nodelist = [int(node) for node in nodeids.split(",")]
         except ValueError:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="nodeid must be comma separated ids, e.g 100,101,102")
-        expression = select(Desktop).options(
-            selectinload(Desktop.interface).selectinload(Interface.network_device)
-        ).where(Desktop.id.in_(nodelist))
-    elif site is None:
-        expression = select(Desktop).options(
-            selectinload(Desktop.interface).selectinload(Interface.network_device)
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST, detail="nodeid must be comma separated ids, e.g 100,101,102"
+            )
+        expression = (
+            select(Desktop)
+            .options(selectinload(Desktop.interface).selectinload(Interface.network_device))
+            .where(Desktop.id.in_(nodelist))
         )
+    elif site is None:
+        expression = select(Desktop).options(selectinload(Desktop.interface).selectinload(Interface.network_device))
     elif site:
         expression = (
             select(Desktop)
-            .options(
-                selectinload(Desktop.interface).selectinload(Interface.network_device)
-            )
+            .options(selectinload(Desktop.interface).selectinload(Interface.network_device))
             .where(Desktop.site.in_(site.split(",")))
         )
 
@@ -140,18 +132,12 @@ async def get_site_devices(site: str = None, user: User = Depends(get_current_us
     with Session(get_engine()) as session:
         desktops = session.exec(
             select(Desktop)
-            .options(
-                    selectinload(Desktop.interface).selectinload(
-                        Interface.network_device
-                    )
-            )
+            .options(selectinload(Desktop.interface).selectinload(Interface.network_device))
             .where(Desktop.site == site)
         ).all()
         results.update({"desktops": desktops})
 
-        network_devices = session.exec(
-            select(Network).where(Network.site == site)
-        ).all()
+        network_devices = session.exec(select(Network).where(Network.site == site)).all()
         results.update({"network_devices": network_devices})
 
     return [results]
@@ -167,11 +153,7 @@ async def search_inventory(q: str = None, user: User = Depends(get_current_user)
         with Session(get_engine()) as session:
             desktops = session.exec(
                 select(Desktop)
-                .options(
-                    selectinload(Desktop.interface).selectinload(
-                        Interface.network_device
-                    )
-                )
+                .options(selectinload(Desktop.interface).selectinload(Interface.network_device))
                 .where(
                     or_(
                         Desktop.hostname.ilike(f"%{q}%"),
@@ -183,12 +165,7 @@ async def search_inventory(q: str = None, user: User = Depends(get_current_user)
             results.update({"desktops": desktops})
 
             network_devices = session.exec(
-                select(Network).where(
-                    or_(
-                        Network.hostname.ilike(f"%{q}%"),
-                        Network.ip.ilike(f"%{q}%")
-                    )
-                )
+                select(Network).where(or_(Network.hostname.ilike(f"%{q}%"), Network.ip.ilike(f"%{q}%")))
             ).all()
             results.update({"network_devices": network_devices})
             interfaces = session.exec(

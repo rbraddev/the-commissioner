@@ -12,26 +12,18 @@ settings: Settings = get_settings()
 
 
 class Host:
-    def __init__(
-        self, hostname: str, ip: str, platform: str, device_type: str, nodeid: int
-    ) -> None:
+    def __init__(self, hostname: str, ip: str, platform: str, device_type: str, nodeid: int) -> None:
         if platform not in PLATFORM.keys():
-            raise InvalidPlatform(
-                f"Host {hostname}: platform must be {list(PLATFORM.keys())}"
-            )
+            raise InvalidPlatform(f"Host {hostname}: platform must be {list(PLATFORM.keys())}")
         self.hostname: str = hostname
         try:
             self.ip: str = str(IPv4Address(ip))
         except AddressValueError:
-            raise InvalidIPAddress(
-                f"Host: {hostname} - has an invalid ip address of {ip}"
-            )
+            raise InvalidIPAddress(f"Host: {hostname} - has an invalid ip address of {ip}")
         self.platform: str = platform
         self.device_type: str = device_type
         self.nodeid: int = nodeid
-        self.credentials: Credentials = Credentials(
-            settings.API_USER, settings.API_PASSWORD
-        )
+        self.credentials: Credentials = Credentials(settings.API_USER, settings.API_PASSWORD)
         self.connection: SSH = None
         self.tasks: Tasks = None
         self.failed_msg: str = None
@@ -48,9 +40,7 @@ class Host:
         elif self.platform == "nxos":
             self.tasks = NXOSTasks(connection=self.connection)
         else:
-            raise NoTaskListFound(
-                f"Unable to load task list for: {self.device_type} - {self.platform}"
-            )
+            raise NoTaskListFound(f"Unable to load task list for: {self.device_type} - {self.platform}")
 
     def __repr__(self) -> str:
         return f"Host(Hostname: {self.hostname}, IP: {self.ip})"

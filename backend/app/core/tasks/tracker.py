@@ -50,17 +50,11 @@ class TaskTracker:
                 self.name = task_data.get("name")
             else:
                 raise NoTaskFound("No tasks found with Task ID provided")
-    
+
     def log_task(self):
         with Session(get_engine()) as session:
             session.add(
-                TaskLogs(
-                    time=datetime.now(),
-                    username=self.username,
-                    taskname=self.name,
-                    task_path=self.task_path
-                    
-                )
+                TaskLogs(time=datetime.now(), username=self.username, taskname=self.name, task_path=self.task_path)
             )
             session.commit()
 
@@ -174,7 +168,7 @@ def track_task(func):
             result = None
             await tracker.task_failed(str(exc))
         asyncio.create_task(track_complete(tracker))
-        return result    
+        return result
 
     return wrapper
 
@@ -182,7 +176,8 @@ def track_task(func):
 async def track_complete(tracker: TaskTracker):
     while await tracker.get("status") != "complete":
         if int(await tracker.get("complete")) == int(await tracker.get("total")):
-            await end_task(tracker) 
+            await end_task(tracker)
+
 
 async def start_task(tracker: TaskTracker):
     await tracker.set_status("running")

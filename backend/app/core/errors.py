@@ -10,9 +10,7 @@ def unauth_error(detail: str, auth_type: str) -> HTTPException:
 
 
 def server_error(detail: str) -> HTTPException:
-    return HTTPException(
-        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=detail
-    )
+    return HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=detail)
 
 
 def invalid_data(detail: str):

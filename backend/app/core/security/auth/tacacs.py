@@ -11,9 +11,7 @@ class TacacsAuth(Auth):
 
     def authenticate(self) -> bool:
         try:
-            client = TACACSClient(
-                host=settings.TACACS_SVR, port=49, secret=settings.TACACS_KEY
-            )
+            client = TACACSClient(host=settings.TACACS_SVR, port=49, secret=settings.TACACS_KEY)
             return client.authenticate(self.username, self.password).valid
         except ConnectionRefusedError:
             raise errors.server_error("Unable to connect to TACACS")

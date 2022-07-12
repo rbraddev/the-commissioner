@@ -9,9 +9,7 @@ PLATFORM = {"ios": AsyncIOSXEDriver, "nxos": AsyncNXOSDriver}
 
 
 class SSH(Base):
-    def __init__(
-        self, host: str, username: str, password: str, platform: str, enable: str
-    ) -> None:
+    def __init__(self, host: str, username: str, password: str, platform: str, enable: str) -> None:
         self._con: AsyncNetworkDriver = None
         self.host: str = host
         self.username: str = username

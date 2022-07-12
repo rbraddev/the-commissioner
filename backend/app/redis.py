@@ -9,6 +9,4 @@ settings: Settings = get_settings()
 
 
 async def get_redis_con() -> Redis:
-    return aioredis.from_url(
-        f"redis://{settings.REDIS_SERVER}", encoding="utf-8", decode_responses=True
-    )
+    return aioredis.from_url(f"redis://{settings.REDIS_SERVER}", encoding="utf-8", decode_responses=True)

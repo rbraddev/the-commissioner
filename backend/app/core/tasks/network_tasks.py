@@ -67,24 +67,16 @@ async def update_interfaces_db(nodeid: int, interfaces: dict):
         for interface, data in interfaces.items():
             data.update({"name": interface})
             if interface in (inf.name for inf in network_device.interfaces):
-                db_inf = next(
-                    inf for inf in network_device.interfaces if inf.name == interface
-                )
+                db_inf = next(inf for inf in network_device.interfaces if inf.name == interface)
                 updates = interface_updates(db_inf, data)
                 if updates:
                     for key, value in updates.items():
                         if key == "desktop":
                             if value:
-                                desktop = session.exec(
-                                    select(Desktop).where(Desktop.mac == value)
-                                ).one()
+                                desktop = session.exec(select(Desktop).where(Desktop.mac == value)).one()
                                 desktop.interface = db_inf
                             else:
-                                desktop = session.exec(
-                                    select(Desktop).where(
-                                        Desktop.id == db_inf.desktop[0].id
-                                    )
-                                ).one()
+                                desktop = session.exec(select(Desktop).where(Desktop.id == db_inf.desktop[0].id)).one()
                                 desktop.interface = None
                             session.add(desktop)
                         else:
@@ -99,9 +91,7 @@ async def update_interfaces_db(nodeid: int, interfaces: dict):
                 session.commit()
                 session.refresh(new_interface)
                 if desktop:
-                    desktop = session.exec(
-                        select(Desktop).where(Desktop.mac == desktop)
-                    ).one()
+                    desktop = session.exec(select(Desktop).where(Desktop.mac == desktop)).one()
                     desktop.interface = new_interface
                     session.add(desktop)
                     session.commit()
@@ -137,13 +127,11 @@ def interface_updates(in_db, current):
 @track_task
 async def deactivate_site_task(site: str, tracker: TaskTracker):
     with Session(get_engine()) as session:
-        hosts = session.exec(
-            select(Network).where(Network.site == site, Network.device_type == "switch")
-        ).all()
+        hosts = session.exec(select(Network).where(Network.site == site, Network.device_type == "switch")).all()
 
     if hosts == []:
         raise ValueError("No hosts found")
-    
+
     await tracker.set_total(len(hosts))
 
     tasks = [
@@ -170,13 +158,11 @@ async def deactivate_site_device(host: Host, tracker: TaskTracker):
 @track_task
 async def activate_site_task(site: str, tracker: TaskTracker):
     with Session(get_engine()) as session:
-        hosts = session.exec(
-            select(Network).where(Network.site == site, Network.device_type == "switch")
-        ).all()
+        hosts = session.exec(select(Network).where(Network.site == site, Network.device_type == "switch")).all()
 
     if hosts == []:
         raise ValueError("No hosts found")
-    
+
     await tracker.set_total(len(hosts))
 
     tasks = [
@@ -203,13 +189,11 @@ async def activate_site_device(host: Host, tracker: TaskTracker):
 @track_task
 async def get_site_status_task(site: str, tracker: TaskTracker):
     with Session(get_engine()) as session:
-        hosts = session.exec(
-            select(Network).where(Network.site == site, Network.device_type == "switch")
-        ).all()
-    
+        hosts = session.exec(select(Network).where(Network.site == site, Network.device_type == "switch")).all()
+
     if hosts == []:
         raise ValueError("No hosts found")
-    
+
     await tracker.set_total(len(hosts))
 
     tasks = [
