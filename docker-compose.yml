@@ -1,16 +1,24 @@
 version: '3.8'
 
 services:
+  proxy:
+    container_name: proxy
+    image: caddy:alpine
+    ports:
+      - "8080:80"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile  
+
   api:
     container_name: api
     build:
       context: .
       dockerfile: ./backend/docker/Dockerfile
+    expose:
+      - 8000
     command: /start.sh
     volumes:
       - ./backend:/usr/src/app
-    ports:
-      - 8000:8000
     env_file:
       - ./backend/.env/.dev
     depends_on:
@@ -19,8 +27,6 @@ services:
   db:
     container_name: db
     image: postgres:13.4
-    expose:
-      - 5432
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
@@ -28,27 +34,25 @@ services:
     volumes:
       - pgdb:/var/lib/postgresql/data
 
-  # pgadmin:
-  #   container_name: pgadmin
-  #   image: dpage/pgadmin4
-  #   restart: always
-  #   environment:
-  #     PGADMIN_DEFAULT_EMAIL: admin@admin.com
-  #     PGADMIN_DEFAULT_PASSWORD: root
-  #   ports:
-  #     - "5050:80"
+  ui:
+    container_name: ui
+    build:
+      context: .
+      dockerfile: ./frontend/docker/Dockerfile
+    ports:
+      - 8081:80
 
   redis:
     container_name: redis
     image: redis
   
-  tacacs:
-    container_name: tacacs
-    image: lfkeitel/tacacs_plus:alpine
-    volumes:
-      - ./tacacs/tac_plus.cfg:/etc/tac_plus/tac_plus.cfg
-    expose:
-      - 49
+  # tacacs:
+  #   container_name: tacacs
+  #   image: lfkeitel/tacacs_plus:alpine
+  #   volumes:
+  #     - ./tacacs/tac_plus.cfg:/etc/tac_plus/tac_plus.cfg
+  #   expose:
+  #     - 49
 
 volumes:
   pgdb:
