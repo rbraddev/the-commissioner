@@ -1,17 +1,14 @@
 FROM node:alpine as builder
 
 WORKDIR /app
-COPY ./frontend/package.json ./
-
-RUN npm install @quasar/cli 
-
 COPY ./frontend .
 
-RUN npx quasar build
-
+RUN npm install -g @quasar/cli
+RUN npm install && npm install --dev-only && quasar build
 
 FROM nginx:alpine as production
-COPY --from=builder /app/dist/spa /app
+COPY --from=builder /app/dist/spa /usr/share/nginx/html
+COPY ./frontend/docker/nginx.conf /etc/nginx/nginx.conf
 
 EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]

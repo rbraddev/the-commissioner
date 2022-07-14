@@ -1,7 +1,7 @@
 import { boot } from 'quasar/wrappers'
 
 const config = {
-  WS_URL: 'wss://api.networkdev.co.uk/tasks/ws'
+  WS_URL: 'wss://localhost/api/v1/tasks/ws'
 }
 
 export default boot(({ app }) => {

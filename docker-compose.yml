@@ -5,7 +5,7 @@ services:
     container_name: proxy
     image: caddy:alpine
     ports:
-      - "8080:80"
+      - "80:80"
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile  
 
@@ -39,20 +39,20 @@ services:
     build:
       context: .
       dockerfile: ./frontend/docker/Dockerfile
-    ports:
-      - 8081:80
+    environment:
+      - API_URL=localhost
 
   redis:
     container_name: redis
     image: redis
   
-  # tacacs:
-  #   container_name: tacacs
-  #   image: lfkeitel/tacacs_plus:alpine
-  #   volumes:
-  #     - ./tacacs/tac_plus.cfg:/etc/tac_plus/tac_plus.cfg
-  #   expose:
-  #     - 49
+  tacacs:
+    container_name: tacacs
+    image: lfkeitel/tacacs_plus:alpine
+    # volumes:
+    #   - ./tacacs/tac_plus.cfg:/etc/tac_plus/tac_plus.cfg
+    expose:
+      - 49
 
 volumes:
   pgdb:

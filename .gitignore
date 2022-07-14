@@ -1,4 +1,5 @@
 .vscode
+.quasar
 
 playground.py
 database.db
